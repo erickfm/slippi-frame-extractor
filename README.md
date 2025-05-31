@@ -1,6 +1,6 @@
 # slippi-frame-extractor
 
-A fixed-schema pipeline that converts Slippi replays into per-frame Parquet/CSV datasets with separate **P1** and **P2** views for next-input-prediction models.
+A fixed schema pipeline that converts Slippi replays into per frame Parquet datasets with separate **P1** and **P2** views for next input prediction models.
 
 ## Features
 
