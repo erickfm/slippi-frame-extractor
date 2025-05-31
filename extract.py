@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Dump a Slippi replay to three parquet/CSV tables with a **fixed column
+Dump a Slippi replay to two parquet files with a **fixed column
 schema across all replays**.
 
 Files produced ( <base> = <stage>_<p1>_vs_<p2>_<timestamp>_<uuid> ):
 
-  • <base>-p1.{parquet,csv}         – p1_ → self_, p2_ → opp_
-  • <base>-p2.{parquet,csv}         – p2_ → self_, p1_ → opp_
+  • <base>-p1.{parquet}         – p1_ → self_, p2_ → opp_
+  • <base>-p2.{parquet}         – p2_ → self_, p1_ → opp_
 """
 
 import re
@@ -18,9 +18,7 @@ from melee import Console
 from melee.enums import Menu
 
 # --------------------------------------------------------------------------
-# SLP_PATH   = "/Users/erick/Slippi/Game_20230501T203934.slp"
-# SLP_PATH = "/Users/erick/Downloads/preview/13_54_42 Marth + Falco (FoD).slp"
-SLP_PATH = "/Users/erick/Downloads/preview/14_40_31 Ice Climbers + Luigi (FD).slp"
+SLP_PATH = "./"
 MAX_PROJ   = 8                    # hard cap on projectile slots
 PROJ_FIELDS = (
     "frame", "owner",
