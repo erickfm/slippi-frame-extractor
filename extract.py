@@ -57,7 +57,7 @@ def encode_row(row: dict) -> dict:
 
     return row
 
-# List all files in the directory (reverse order so newest first)
+# List all files in the directory
 files = os.listdir(SLP_DIR)
 
 for file in files:
