@@ -58,7 +58,7 @@ def encode_row(row: dict) -> dict:
     return row
 
 # List all files in the directory (reverse order so newest first)
-files = os.listdir(SLP_DIR)[::-1]
+files = os.listdir(SLP_DIR)
 
 for file in files:
     if not file.lower().endswith(".slp"):
@@ -109,22 +109,23 @@ for file in files:
                 row[f"{pref}btn_{btn.name}"] = state
 
             # sticks & shoulders
+            # These will be floats (default Python floats → float64 initially)
             row[f"{pref}main_x"], row[f"{pref}main_y"] = ps.controller_state.main_stick
             row[f"{pref}c_x"],    row[f"{pref}c_y"]    = ps.controller_state.c_stick
             row[f"{pref}l_shldr"] = ps.controller_state.l_shoulder
             row[f"{pref}r_shldr"] = ps.controller_state.r_shoulder
 
-            # misc scalars (including ECB split into x/y)
+            # misc scalars (including ECB split into x/y). ECBs are Python floats here.
             row.update({
                 f"{pref}costume":              ps.costume,                   # int
-                f"{pref}ecb_bottom_x":         ps.ecb_bottom[0],            # float
-                f"{pref}ecb_bottom_y":         ps.ecb_bottom[1],            # float
-                f"{pref}ecb_left_x":           ps.ecb_left[0],              # float
-                f"{pref}ecb_left_y":           ps.ecb_left[1],              # float
-                f"{pref}ecb_right_x":          ps.ecb_right[0],             # float
-                f"{pref}ecb_right_y":          ps.ecb_right[1],             # float
-                f"{pref}ecb_top_x":            ps.ecb_top[0],               # float
-                f"{pref}ecb_top_y":            ps.ecb_top[1],               # float
+                f"{pref}ecb_bottom_x":         float(ps.ecb_bottom[0]),     # ensure Python float
+                f"{pref}ecb_bottom_y":         float(ps.ecb_bottom[1]),
+                f"{pref}ecb_left_x":           float(ps.ecb_left[0]),
+                f"{pref}ecb_left_y":           float(ps.ecb_left[1]),
+                f"{pref}ecb_right_x":          float(ps.ecb_right[0]),
+                f"{pref}ecb_right_y":          float(ps.ecb_right[1]),
+                f"{pref}ecb_top_x":            float(ps.ecb_top[0]),
+                f"{pref}ecb_top_y":            float(ps.ecb_top[1]),
                 f"{pref}facing":               ps.facing,                   # bool
                 f"{pref}hitlag_left":          ps.hitlag_left,              # int
                 f"{pref}hitstun_left":         ps.hitstun_frames_left,      # int
@@ -134,15 +135,15 @@ for file in files:
                 f"{pref}moonwalkwarning":      ps.moonwalkwarning,          # bool
                 f"{pref}off_stage":            ps.off_stage,                # bool
                 f"{pref}on_ground":            ps.on_ground,                # bool
-                f"{pref}percent":              ps.percent,                  # float
-                f"{pref}pos_x":                ps.position.x,               # float
-                f"{pref}pos_y":                ps.position.y,               # float
-                f"{pref}shield_strength":      ps.shield_strength,          # float
-                f"{pref}speed_air_x_self":     ps.speed_air_x_self,         # float
-                f"{pref}speed_ground_x_self":  ps.speed_ground_x_self,      # float
-                f"{pref}speed_x_attack":       ps.speed_x_attack,           # float
-                f"{pref}speed_y_attack":       ps.speed_y_attack,           # float
-                f"{pref}speed_y_self":         ps.speed_y_self,             # float
+                f"{pref}percent":              float(ps.percent),           # float
+                f"{pref}pos_x":                float(ps.position.x),         # float
+                f"{pref}pos_y":                float(ps.position.y),         # float
+                f"{pref}shield_strength":      float(ps.shield_strength),    # float
+                f"{pref}speed_air_x_self":     float(ps.speed_air_x_self),   # float
+                f"{pref}speed_ground_x_self":  float(ps.speed_ground_x_self),# float
+                f"{pref}speed_x_attack":       float(ps.speed_x_attack),     # float
+                f"{pref}speed_y_attack":       float(ps.speed_y_attack),     # float
+                f"{pref}speed_y_self":         float(ps.speed_y_self),       # float
                 f"{pref}stock":                ps.stock,                    # int
             })
 
@@ -156,21 +157,22 @@ for file in files:
                     f"{nana_pref}action_frame":  nana.action_frame,          # int
                 })
                 for btn, state in nana.controller_state.button.items():
-                    row[f"{nana_pref}btn_{btn.name}"] = state                 # bool
-                row[f"{nana_pref}main_x"], row[f"{nana_pref}main_y"] = nana.controller_state.main_stick  # floats
-                row[f"{nana_pref}c_x"],    row[f"{nana_pref}c_y"]    = nana.controller_state.c_stick      # floats
-                row[f"{nana_pref}l_shldr"] = nana.controller_state.l_shoulder                      # bool
-                row[f"{nana_pref}r_shldr"] = nana.controller_state.r_shoulder                      # bool
+                    row[f"{nana_pref}btn_{btn.name}"] = state             # bool
+                row[f"{nana_pref}main_x"], row[f"{nana_pref}main_y"] = nana.controller_state.main_stick
+                row[f"{nana_pref}c_x"],    row[f"{nana_pref}c_y"]    = nana.controller_state.c_stick
+                row[f"{nana_pref}l_shldr"] = nana.controller_state.l_shoulder
+                row[f"{nana_pref}r_shldr"] = nana.controller_state.r_shoulder
+
                 row.update({
                     f"{nana_pref}costume":            nana.costume,                   # int
-                    f"{nana_pref}ecb_bottom_x":       nana.ecb_bottom[0],            # float
-                    f"{nana_pref}ecb_bottom_y":       nana.ecb_bottom[1],            # float
-                    f"{nana_pref}ecb_left_x":         nana.ecb_left[0],              # float
-                    f"{nana_pref}ecb_left_y":         nana.ecb_left[1],              # float
-                    f"{nana_pref}ecb_right_x":        nana.ecb_right[0],             # float
-                    f"{nana_pref}ecb_right_y":        nana.ecb_right[1],             # float
-                    f"{nana_pref}ecb_top_x":          nana.ecb_top[0],               # float
-                    f"{nana_pref}ecb_top_y":          nana.ecb_top[1],               # float
+                    f"{nana_pref}ecb_bottom_x":       float(nana.ecb_bottom[0]),      # float
+                    f"{nana_pref}ecb_bottom_y":       float(nana.ecb_bottom[1]),
+                    f"{nana_pref}ecb_left_x":         float(nana.ecb_left[0]),
+                    f"{nana_pref}ecb_left_y":         float(nana.ecb_left[1]),
+                    f"{nana_pref}ecb_right_x":        float(nana.ecb_right[0]),
+                    f"{nana_pref}ecb_right_y":        float(nana.ecb_right[1]),
+                    f"{nana_pref}ecb_top_x":          float(nana.ecb_top[0]),
+                    f"{nana_pref}ecb_top_y":          float(nana.ecb_top[1]),
                     f"{nana_pref}facing":             nana.facing,                   # bool
                     f"{nana_pref}hitlag_left":        nana.hitlag_left,              # int
                     f"{nana_pref}hitstun_left":       nana.hitstun_frames_left,      # int
@@ -180,15 +182,15 @@ for file in files:
                     f"{nana_pref}moonwalkwarning":    nana.moonwalkwarning,          # bool
                     f"{nana_pref}off_stage":          nana.off_stage,                # bool
                     f"{nana_pref}on_ground":          nana.on_ground,                # bool
-                    f"{nana_pref}percent":            nana.percent,                  # float
-                    f"{nana_pref}pos_x":              nana.position.x,               # float
-                    f"{nana_pref}pos_y":              nana.position.y,               # float
-                    f"{nana_pref}shield_strength":    nana.shield_strength,          # float
-                    f"{nana_pref}speed_air_x_self":   nana.speed_air_x_self,         # float
-                    f"{nana_pref}speed_ground_x_self": nana.speed_ground_x_self,      # float
-                    f"{nana_pref}speed_x_attack":     nana.speed_x_attack,           # float
-                    f"{nana_pref}speed_y_attack":     nana.speed_y_attack,           # float
-                    f"{nana_pref}speed_y_self":       nana.speed_y_self,             # float
+                    f"{nana_pref}percent":            float(nana.percent),           # float
+                    f"{nana_pref}pos_x":              float(nana.position.x),         # float
+                    f"{nana_pref}pos_y":              float(nana.position.y),         # float
+                    f"{nana_pref}shield_strength":    float(nana.shield_strength),    # float
+                    f"{nana_pref}speed_air_x_self":   float(nana.speed_air_x_self),   # float
+                    f"{nana_pref}speed_ground_x_self": float(nana.speed_ground_x_self),# float
+                    f"{nana_pref}speed_x_attack":     float(nana.speed_x_attack),     # float
+                    f"{nana_pref}speed_y_attack":     float(nana.speed_y_attack),     # float
+                    f"{nana_pref}speed_y_self":       float(nana.speed_y_self),       # float
                     f"{nana_pref}stock":              nana.stock,                    # int
                 })
 
@@ -212,10 +214,10 @@ for file in files:
                 row.update({
                     f"{pp}frame":   proj.frame,        # int
                     f"{pp}owner":   proj.owner,        # int
-                    f"{pp}pos_x":   proj.position.x,   # float
-                    f"{pp}pos_y":   proj.position.y,   # float
-                    f"{pp}speed_x": proj.speed.x,      # float
-                    f"{pp}speed_y": proj.speed.y,      # float
+                    f"{pp}pos_x":   float(proj.position.x),   # float
+                    f"{pp}pos_y":   float(proj.position.y),   # float
+                    f"{pp}speed_x": float(proj.speed.x),      # float
+                    f"{pp}speed_y": float(proj.speed.y),      # float
                     f"{pp}subtype": proj.subtype,      # int
                     f"{pp}type":    proj.type.name,    # str
                 })
@@ -269,6 +271,12 @@ for file in files:
     # =========================================================================
     df_combined = pd.DataFrame(rows)
 
+    # --------------------------------------------------------------------------
+    # Cast every float64 column, including all ECBs, to float32
+    float64_cols = df_combined.select_dtypes(include=["float64"]).columns
+    for col in float64_cols:
+        df_combined[col] = df_combined[col].astype("float32")
+
     # -------- perspectives -----------------------------------------------------
     def perspective(df: pd.DataFrame, self_pref: str, opp_pref: str) -> pd.DataFrame:
         rename = {}
@@ -292,7 +300,7 @@ for file in files:
 
     # -------- write ------------------------------------------------------------
     df_p1.to_parquet(OUT_DIR / f"{base}-p1.parquet", index=False)
-    df_p2.to_parquet(OUT_DIR / f"{base}-p2.parquet", index=False)
+    df_p2.to_parquet(OUT_DIR / f"{base}-p2-parquet", index=False)
 
     print(
         f"Wrote {len(df_combined)} frames × {df_combined.shape[1]} columns "
