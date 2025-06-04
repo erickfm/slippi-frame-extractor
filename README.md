@@ -8,9 +8,9 @@ A fixed‐schema pipeline that converts Slippi replays into per‐frame Parquet 
 - **Frame‐by‐frame extraction**  
   Parses `.slp` replays using the Melee bindings.
 
-- **Guaranteed 260-column schema**  
+- **278-column schema**  
   - `MAX_PROJ = 8` projectile slots  
-  - Pre-seeded Nana fields  
+  - Pre-seeded fields for consistent datatypes  
   Ensures every replay produces identical columns, even if no projectile or Nana data is present.
 
 - **Two player-centric outputs**  
@@ -34,13 +34,13 @@ FinalDestination_Fox_vs_Marth_20250601-153045_abcd1234-p1.parquet
 
 ## Column Breakdown (260 total)
 
-| Group                           | Columns               |
-|---------------------------------|-----------------------|
-| **Frame metadata**              | 4                     |
-| **Player scalar/control** × 2   | 50 × 2 = 100          |
-| **Projectiles (8 slots × 8)**   | 64                    |
-| **Nana pre-seeded** × 2          | 46 × 2 = 92           |
-| **Total**                       | **260**               |
+| Group                           | Columns      |
+|---------------------------------|--------------|
+| **Frame metadata**              | 22           |
+| **Player scalar/control** × 2   | 50 × 2 = 100 |
+| **Projectiles (8 slots × 8)**   | 64           |
+| **Nana pre-seeded** × 2          | 46 × 2 = 92  |
+| **Total**                       | **278**      |
 
 - “Player scalar/control” refers to things like button flags, positions, percent, stock, etc.  
 - “Nana pre-seeded” fields correspond to the Ice Climbers partner data, expanded so they’re always present (even if unused).

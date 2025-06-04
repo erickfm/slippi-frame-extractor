@@ -14,7 +14,7 @@ import uuid
 import unicodedata
 import pathlib
 import pandas as pd
-from melee import Console
+from melee import Console, stages
 from melee.enums import Menu
 
 # ----------------------------------------------------------------------------
@@ -69,8 +69,6 @@ for file in files:
     console.connect()
 
     rows = []
-    first_stage = first_p1_char = first_p2_char = timestamp = None
-
     while True:
         gs = console.step()
         if gs is None:
@@ -79,25 +77,61 @@ for file in files:
             continue
 
         # ------------------------------------------------ frame‐level ----------
-        if first_stage is None:
-            first_stage   = gs.stage.name if gs.stage else "unknown_stage"
-            timestamp     = gs.startAt  # e.g., '2023-05-02T03:39:34Z'
+        stage       = gs.stage
+        timestamp   = gs.startAt  # e.g., '2023-05-02T03:39:34Z'
+
+        if stage:
+            b0, b1, b2, b3 = stages.BLASTZONES[stage]
+            edge_val = stages.EDGE_POSITION[stage]
+            lp0, lp1, lp2 = stages.left_platform_position(stage)
+            rp0, rp1, rp2 = stages.right_platform_position(stage)
+            tp = stages.top_platform_position(stage)
+            tp0, tp1, tp2 = tp if tp[0] is not None else (float("nan"),) * 3
+            if stage.name == "YOSHIS_STORY":
+                r0, r1, r2 = stages.randall_position(gs.frame)
+            else:
+                r0 = r1 = r2 =  float("nan")
+        else:
+            b0 = b1 = b2 = b3 = float("nan")
+            edge_val =          float("nan")
+            lp0 = lp1 = lp2 =   float("nan")
+            rp0 = rp1 = rp2 =   float("nan")
+            tp0 = tp1 = tp2 =   float("nan")
+            r0 = r1 = r2 =      float("nan")
 
         row = {
-            "frame":    gs.frame,
+            "frame": gs.frame,
             "distance": gs.distance,
-            "stage":    gs.stage.name if gs.stage else None,
-            "startAt":  gs.startAt,
+            "stage": stage.name,
+            "blastzone_left": b0,
+            "blastzone_right": b1,
+            "blastzone_top": b2,
+            "blastzone_bottom": b3,
+            "stage_edge_left": -edge_val,
+            "stage_edge_right": edge_val,
+            "left_platform_height": lp0,
+            "left_platform_left": lp1,
+            "left_platform_right": lp2,
+            "right_platform_height": rp0,
+            "right_platform_left": rp1,
+            "right_platform_right": rp2,
+            "top_platform_height": tp0,
+            "top_platform_left": tp1,
+            "top_platform_right": tp2,
+            "randall_height": r0,
+            "randall_left": r1,
+            "randall_right": r2,
+            "startAt": gs.startAt,
         }
 
         # ------------------------------------------------ players -------------
         for idx, (port, ps) in enumerate(gs.players.items()):
             pref = f"p{idx+1}_"
 
-            if idx == 0 and first_p1_char is None:
-                first_p1_char = ps.character.name
-            if idx == 1 and first_p2_char is None:
-                first_p2_char = ps.character.name
+            if idx == 0:
+                p1_char = ps.character.name
+            if idx == 1:
+                p2_char = ps.character.name
 
             row[f"{pref}port"]         = port
             row[f"{pref}character"]    = ps.character.name
@@ -291,9 +325,9 @@ for file in files:
     df_p2 = perspective(df_combined, "p2_", "p1_")
 
     # -------- filenames --------------------------------------------------------
-    stage_slug = slug(first_stage)
-    p1_slug    = slug(first_p1_char)
-    p2_slug    = slug(first_p2_char)
+    stage_slug = slug(stage.name)
+    p1_slug    = slug(p1_char)
+    p2_slug    = slug(p2_char)
     ts_slug    = slug(timestamp)
     uniq       = uuid.uuid4().hex[:8]
     base       = f"{stage_slug}_{p1_slug}_vs_{p2_slug}_{ts_slug}_{uniq}"
