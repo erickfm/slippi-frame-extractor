@@ -58,7 +58,7 @@ def encode_row(row: dict) -> dict:
     return row
 
 # List all files in the directory
-files = os.listdir(SLP_DIR)
+files = os.listdir(SLP_DIR)[::-1][200:]
 
 for file in files:
     if not file.lower().endswith(".slp"):
@@ -275,6 +275,7 @@ for file in files:
         ]
         NANA_FLOATS = [
             "main_x", "main_y", "c_x", "c_y",
+            "l_shldr", 'r_shldr',
             "ecb_bottom_x", "ecb_bottom_y",
             "ecb_left_x",   "ecb_left_y",
             "ecb_right_x",  "ecb_right_y",
