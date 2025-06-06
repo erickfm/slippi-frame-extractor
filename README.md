@@ -39,8 +39,8 @@ FinalDestination_Fox_vs_Marth_20250601-153045_abcd1234-p1.parquet
 | **Frame metadata**              | 22           |
 | **Player scalar/control** × 2   | 50 × 2 = 100 |
 | **Projectiles (8 slots × 8)**   | 64           |
-| **Nana pre-seeded** × 2          | 46 × 2 = 92  |
-| **Total**                       | **278**      |
+| **Nana pre-seeded** × 2          | 48 × 2 = 96  |
+| **Total**                       | **282**      |
 
 - “Player scalar/control” refers to things like button flags, positions, percent, stock, etc.  
 - “Nana pre-seeded” fields correspond to the Ice Climbers partner data, expanded so they’re always present (even if unused).
