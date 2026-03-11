@@ -99,7 +99,7 @@ All categoricals use the integer `.value` from their libmelee enum directly:
 
 Unknown or missing values are encoded as `-1`.
 
-**Action state IDs are character-scoped.** Melee reuses action IDs across characters — for example, action 351 means `FOX_ILLUSION` for Fox/Falco but `SWORD_DANCE_2_MID` for Marth. The `(character, action)` pair is unambiguous. See `cat_maps.py` for a human-readable reference of stage, character, and projectile type codes. For action states, consult `melee.enums.Action` directly.
+**Action state IDs are character-scoped.** Melee reuses action IDs across characters — for example, action 351 means `FOX_ILLUSION` for Fox/Falco but `SWORD_DANCE_2_MID` for Marth. The `(character, action)` pair is unambiguous. Consult `melee.enums` for the full mappings of all categorical values.
 
 ### Perspective columns
 
