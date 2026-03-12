@@ -10,8 +10,10 @@ Files produced for each replay ( <base> = <stage>_<p1>_vs_<p2>_<timestamp>_<uuid
 
 import argparse
 import logging
+import multiprocessing as mp
 import os
 import re
+import time
 import uuid
 import unicodedata
 import pathlib
@@ -342,6 +344,26 @@ def process_replay(slp_path: str, out_dir: pathlib.Path) -> None:
 
 
 # ----------------------------------------------------------------------------
+def _worker_init():
+    """Suppress noisy logs in child processes."""
+    logging.basicConfig(
+        level=logging.WARNING,
+        format="%(asctime)s %(levelname)s %(message)s",
+        datefmt="%H:%M:%S",
+    )
+
+
+def _worker_fn(args):
+    """Process a single replay. Returns (slp_path, ok: bool)."""
+    slp_path, out_dir = args
+    try:
+        process_replay(slp_path, out_dir)
+        return (slp_path, True)
+    except Exception:
+        return (slp_path, False)
+
+
+# ----------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(
         description="Extract Slippi .slp replays to per-frame parquet files."
@@ -351,6 +373,17 @@ def main():
         "-o", "--out-dir",
         default="./extracted",
         help="Output directory for parquet files (default: ./extracted)",
+    )
+    parser.add_argument(
+        "-j", "--workers",
+        type=int,
+        default=None,
+        help="Parallel workers (default: CPU count)",
+    )
+    parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="Skip .slp files that already have parquet output",
     )
     args = parser.parse_args()
 
@@ -362,25 +395,70 @@ def main():
 
     slp_dir = args.slp_dir
     out_dir = pathlib.Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    n_workers = args.workers or mp.cpu_count()
 
-    files = [f for f in os.listdir(slp_dir) if f.lower().endswith(".slp")]
-    log.info("Found %d .slp files in %s", len(files), slp_dir)
+    files = sorted(f for f in os.listdir(slp_dir) if f.lower().endswith(".slp"))
+
+    if args.skip_existing:
+        done_log = out_dir / ".done_slps.txt"
+        if done_log.exists():
+            already_done = set(done_log.read_text().splitlines())
+            before = len(files)
+            files = [f for f in files if f not in already_done]
+            log.info("Skipping %d already-extracted replays", before - len(files))
+
+    total = len(files)
+    log.info("Found %d .slp files in %s", total, slp_dir)
+    log.info("Using %d parallel workers", n_workers)
+
+    tasks = [(os.path.join(slp_dir, f), out_dir) for f in files]
 
     succeeded = 0
     failed = 0
-    for i, file in enumerate(files, 1):
-        slp_path = os.path.join(slp_dir, file)
-        try:
-            process_replay(slp_path, out_dir)
+    failed_files = []
+    done_log = out_dir / ".done_slps.txt"
+    done_fd = open(done_log, "a")
+    t0 = time.time()
+
+    def _handle_result(i, path, ok):
+        nonlocal succeeded, failed
+        if ok:
             succeeded += 1
-        except Exception:
+            done_fd.write(os.path.basename(path) + "\n")
+            if succeeded % 50 == 0:
+                done_fd.flush()
+        else:
             failed += 1
-            log.exception("Failed to process %s", file)
-
+            failed_files.append(path)
         if i % 100 == 0:
-            log.info("Progress: %d/%d files processed", i, len(files))
+            elapsed = time.time() - t0
+            rate = i / elapsed
+            eta = (total - i) / rate if rate > 0 else 0
+            log.info("[%d/%d] %.1f files/s  ETA %.0fm%.0fs  (%d ok, %d fail)",
+                     i, total, rate, eta // 60, eta % 60, succeeded, failed)
 
-    log.info("Done. %d succeeded, %d failed out of %d total", succeeded, failed, len(files))
+    if n_workers <= 1:
+        for i, task in enumerate(tasks, 1):
+            path, ok = _worker_fn(task)
+            _handle_result(i, path, ok)
+    else:
+        with mp.Pool(n_workers, initializer=_worker_init) as pool:
+            for i, (path, ok) in enumerate(
+                pool.imap_unordered(_worker_fn, tasks, chunksize=8), 1
+            ):
+                _handle_result(i, path, ok)
+
+    done_fd.close()
+    elapsed = time.time() - t0
+    log.info("Done. %d succeeded, %d failed out of %d total (%.0fs, %.1f files/s)",
+             succeeded, failed, total, elapsed, total / elapsed if elapsed > 0 else 0)
+
+    if failed_files:
+        fail_log = out_dir / "failed_files.txt"
+        with open(fail_log, "w") as f:
+            f.write("\n".join(failed_files))
+        log.info("Failed file paths written to %s", fail_log)
 
 
 if __name__ == "__main__":

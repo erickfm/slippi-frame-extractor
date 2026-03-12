@@ -21,8 +21,8 @@ A fixed-schema pipeline that converts Slippi replays into per-frame Parquet data
 - **No mixed types**
   Every column is a single consistent type across all rows and all replays. No string/int mixing, no type coercion surprises. See [Data Types](#data-types) for details.
 
-- **Batch processing with error handling**
-  Corrupt or malformed `.slp` files are logged and skipped — one bad file won't kill a long batch run.
+- **Parallel batch processing**
+  Multi-core extraction with `-j` flag (defaults to all CPUs). Corrupt or malformed `.slp` files are logged and skipped — one bad file won't kill a long batch run. Supports `--skip-existing` for resumable runs.
 
 - **Self-describing filenames**
   Format: `<stage>_<p1char>_vs_<p2char>_<timestamp>_<uuid>-p{1,2}.parquet`
@@ -42,7 +42,27 @@ final_destination_fox_vs_marth_2025_06_01t15_30_45z_abcd1234-p1.parquet
 final_destination_fox_vs_marth_2025_06_01t15_30_45z_abcd1234-p2.parquet
 ```
 
-Load with pandas:
+### Parallel extraction
+
+Processing large datasets (tens of thousands of replays) is CPU-bound at ~1 file/s single-threaded. Use `-j` to parallelize across all cores:
+
+```bash
+# Use all CPU cores (default)
+python extract.py /path/to/slp/files -o /path/to/output -j 0
+
+# Use 16 workers explicitly
+python extract.py /path/to/slp/files -o /path/to/output -j 16
+
+# Resume an interrupted run (skips already-processed files)
+python extract.py /path/to/slp/files -o /path/to/output --skip-existing
+```
+
+With 32 cores, expect ~20-30 files/s throughput, converting 94k replays in under 2 hours.
+
+A `.done_slps.txt` log is maintained in the output directory so `--skip-existing` can efficiently resume after interruptions. Failed files are listed in `failed_files.txt`.
+
+### Load with pandas
+
 ```python
 import pandas as pd
 df = pd.read_parquet("...-p1.parquet")
